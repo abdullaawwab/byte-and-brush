@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Byte & Brush — Owner Dashboard</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--ink:#111827;--muted:#667085;--line:#e4e7ec;--accent:#111827;--good:#087443;--bad:#b42318}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}
+button,input,textarea{font:inherit}.wrap{max-width:1180px;margin:auto;padding:24px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:22px}.brand{font-weight:900;font-size:1.3rem}.muted{color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 5px 25px #1018280b;margin-bottom:18px}
+.login{max-width:440px;margin:9vh auto}.login h1{margin-top:0}.field{display:grid;gap:7px;margin:13px 0}.field label{font-weight:700;font-size:.9rem}.field input,.field textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px 12px;background:#fff}
+.btn{border:0;border-radius:10px;padding:11px 15px;font-weight:800;cursor:pointer;background:var(--accent);color:#fff}.btn.secondary{background:#eef1f5;color:var(--ink)}.btn.danger{background:#fff0f0;color:var(--bad);border:1px solid #ffd2d0}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.price{font-size:1.7rem;font-weight:900}.status{min-height:22px;margin-top:10px;font-size:.9rem}.success{color:var(--good)}.error{color:var(--bad)}
+.inbox{display:grid;gap:10px}.item{border:1px solid var(--line);border-radius:14px;padding:15px;background:#fff}.item.unread{border-left:5px solid #111827}.item h3{margin:0 0 5px}.item p{margin:5px 0;color:#475467}.pill{font-size:.76rem;padding:4px 8px;border-radius:999px;background:#eef1f5}.small{font-size:.82rem}
+.hidden{display:none!important}
+@media(max-width:800px){.grid{grid-template-columns:1fr}.wrap{padding:14px}.top{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section id="loginView" class="card login">
+    <div class="brand">Byte &amp; Brush Studio</div>
+    <h1>Owner dashboard</h1>
+    <p class="muted">Private area for prices and enquiries.</p>
+    <form id="loginForm">
+      <div class="field"><label>Email</label><input id="email" type="email" autocomplete="username" required></div>
+      <div class="field"><label>Password</label><input id="password" type="password" autocomplete="current-password" required></div>
+      <button class="btn" type="submit" id="loginBtn">Sign in</button>
+      <div id="loginStatus" class="status"></div>
+    </form>
+  </section>
+
+  <section id="appView" class="hidden">
+    <div class="top">
+      <div>
+        <div class="brand">Byte &amp; Brush Owner Dashboard</div>
+        <div id="who" class="muted small"></div>
+      </div>
+      <div class="row">
+        <a class="btn secondary" href="/">View website</a>
+        <button class="btn secondary" id="logoutBtn">Sign out</button>
+      </div>
+    </div>
+
+    <section class="card">
+      <div class="row" style="justify-content:space-between"><div><h2 style="margin:0">Prices &amp; delivery</h2><p class="muted">Changes are stored on the server and become live for everyone.</p></div><button class="btn" id="savePrices">Save changes</button></div>
+      <div class="grid" style="margin-top:15px">
+        <div class="field"><label>Website price (₹)</label><input id="webPrice" type="number" min="0" step="1"></div>
+        <div class="field"><label>Poster price (₹)</label><input id="posterPrice" type="number" min="0" step="1"></div>
+        <div class="field"><label>Game price (₹)</label><input id="gamePrice" type="number" min="0" step="1"></div>
+      </div>
+      <div class="grid">
+        <div class="field"><label>Website delivery</label><input id="webDays"></div>
+        <div class="field"><label>Poster delivery</label><input id="posterDays"></div>
+        <div class="field"><label>Game delivery</label><input id="gameDays"></div>
+      </div>
+      <div id="priceStatus" class="status"></div>
+    </section>
+
+    <section class="card">
+      <div class="row" style="justify-content:space-between">
+        <div><h2 style="margin:0">Enquiry inbox</h2><p class="muted">New website enquiries appear here without exposing them publicly.</p></div>
+        <button class="btn secondary" id="refreshInbox">Refresh</button>
+      </div>
+      <div id="inbox" class="inbox" style="margin-top:15px"></div>
+      <div id="inboxStatus" class="status"></div>
+    </section>
+  </section>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+let currentItems=[];
+async function api(path, options={}){
+  const res=await fetch("/.netlify/functions/"+path,{credentials:"include",...options,headers:{"Content-Type":"application/json",...(options.headers||{})}});
+  const data=await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data.error||("Request failed: "+res.status));
+  return data;
+}
+function status(id,msg,ok=false){$(id).textContent=msg;$(id).className="status "+(ok?"success":"error");}
+async function checkSession(){
+  try{
+    const me=await api("auth-me");
+    $("loginView").classList.add("hidden");$("appView").classList.remove("hidden");
+    $("who").textContent=me.email;
+    await Promise.all([loadPrices(),loadInbox()]);
+  }catch(e){}
+}
+async function loadPrices(){
+  const d=await api("owner-data");
+  $("webPrice").value=d.prices.web;$("posterPrice").value=d.prices.poster;$("gamePrice").value=d.prices.game;
+  $("webDays").value=d.days.web;$("posterDays").value=d.days.poster;$("gameDays").value=d.days.game;
+}
+async function loadInbox(){
+  $("inbox").innerHTML="<div class='muted'>Loading enquiries…</div>";
+  try{
+    const d=await api("owner-inbox");
+    currentItems=d.items||[];
+    if(!currentItems.length){$("inbox").innerHTML="<div class='muted'>No enquiries yet.</div>";return}
+    $("inbox").innerHTML=currentItems.map(x=>`
+      <article class="item ${x.read?"":"unread"}">
+        <div class="row" style="justify-content:space-between">
+          <h3>${esc(x.name||"Unnamed")}</h3>
+          <span class="pill">${esc(x.service||"Enquiry")}</span>
+        </div>
+        <p><b>Email:</b> ${esc(x.email||"—")}</p>
+        ${x.phone?`<p><b>Phone:</b> ${esc(x.phone)}</p>`:""}
+        <p><b>Idea:</b> ${esc(x.idea||"—")}</p>
+        ${x.deadline?`<p><b>Deadline:</b> ${esc(x.deadline)}</p>`:""}
+        <p class="small muted">${esc(new Date(x.createdAt).toLocaleString())}</p>
+        <div class="row">
+          ${x.read?"":"<button class='btn secondary' onclick='markRead(\""+escAttr(x.id)+"\")'>Mark read</button>"}
+          <button class="btn danger" onclick='deleteItem("${escAttr(x.id)}")'>Delete</button>
+        </div>
+      </article>`).join("");
+  }catch(e){status("inboxStatus",e.message)}
+}
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function escAttr(v){return String(v??"").replace(/\\/g,"\\\\").replace(/"/g,'\\"')}
+async function markRead(id){try{await api("owner-inbox",{method:"PATCH",body:JSON.stringify({id,read:true})});loadInbox()}catch(e){status("inboxStatus",e.message)}}
+async function deleteItem(id){if(!confirm("Delete this enquiry?"))return;try{await api("owner-inbox",{method:"DELETE",body:JSON.stringify({id})});loadInbox()}catch(e){status("inboxStatus",e.message)}}
+
+$("loginForm").addEventListener("submit",async e=>{
+  e.preventDefault();$("loginBtn").disabled=true;status("loginStatus","Signing in…",true);
+  try{
+    const d=await api("auth-login",{method:"POST",body:JSON.stringify({email:$("email").value,password:$("password").value})});
+    $("who").textContent=d.email;$("loginView").classList.add("hidden");$("appView").classList.remove("hidden");
+    await Promise.all([loadPrices(),loadInbox()]);
+  }catch(err){status("loginStatus",err.message)}
+  finally{$("loginBtn").disabled=false}
+});
+$("logoutBtn").onclick=async()=>{try{await api("auth-logout",{method:"POST",body:"{}"});}catch(e){}location.reload()};
+$("savePrices").onclick=async()=>{
+  const payload={prices:{web:Number($("webPrice").value),poster:Number($("posterPrice").value),game:Number($("gamePrice").value)},days:{web:$("webDays").value.trim(),poster:$("posterDays").value.trim(),game:$("gameDays").value.trim()}};
+  if(Object.values(payload.prices).some(v=>!Number.isFinite(v)||v<0)){status("priceStatus","Prices must be valid non-negative numbers.");return}
+  try{await api("owner-data",{method:"PUT",body:JSON.stringify(payload)});status("priceStatus","Saved. The public website now uses the new values.",true)}catch(e){status("priceStatus",e.message)}
+};
+$("refreshInbox").onclick=loadInbox;
+checkSession();
+</script>
+</body>
+</html>

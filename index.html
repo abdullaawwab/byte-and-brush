@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Byte & Brush Studio — websites, posters and mini games</title>
+<meta name="description" content="Byte & Brush Studio makes websites, posters and simple games for small businesses, schools and events.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖌️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Caveat:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F2F5FB; --grid:#DCE4F2; --ink:#17213B; --soft:#5B6683;
+  --marker:#FFC93C; --pink:#FF4F81; --teal:#19B6A6; --sky:#4D7CFE; --white:#fff;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --hand:"Caveat", "Comic Sans MS", cursive;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-behavior:smooth; scroll-padding-top:calc(72px + env(safe-area-inset-top,0px))}
+body{
+  margin:0; font-family:var(--display); color:var(--ink); line-height:1.55; font-size:17px;
+  background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:28px 28px;
+}
+img,svg,canvas{max-width:100%}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--sky); outline-offset:3px; border-radius:6px}
+.wrap{max-width:1120px; margin:0 auto; padding:0 20px}
+h1,h2,h3{line-height:1.08; margin:0 0 .4em; font-weight:800; letter-spacing:-.02em}
+h1{font-size:clamp(2.3rem,6vw,4.2rem)}
+h2{font-size:clamp(1.8rem,4vw,2.7rem)}
+h3{font-size:1.25rem}
+p{margin:0 0 1em; max-width:62ch}
+.note{font-family:var(--hand); font-size:1.5rem; color:var(--pink); line-height:1.1}
+section{padding:72px 0}
+
+/* header */
+header{position:sticky; top:env(safe-area-inset-top,0px); z-index:20; background:rgba(242,245,251,.92); backdrop-filter:blur(8px); border-bottom:2px solid var(--ink)}
+.bar{display:flex; align-items:center; justify-content:space-between; height:64px}
+.logo{display:flex; align-items:center; gap:10px; text-decoration:none; font-weight:800; font-size:1.2rem}
+.logo-mark{width:38px; height:38px}
+nav ul{display:flex; gap:22px; list-style:none; margin:0; padding:0}
+nav a{text-decoration:none; font-weight:600}
+nav a:hover{text-decoration:underline; text-decoration-thickness:3px; text-decoration-color:var(--marker)}
+.btn{display:inline-flex; align-items:center; gap:8px; border:2px solid var(--ink); background:var(--marker); color:var(--ink); font:inherit; font-weight:700; padding:11px 20px; border-radius:12px; cursor:pointer; text-decoration:none; box-shadow:4px 4px 0 var(--ink); transition:transform .12s, box-shadow .12s}
+.btn:hover{transform:translate(-1px,-1px); box-shadow:5px 5px 0 var(--ink)}
+.btn:active{transform:translate(3px,3px); box-shadow:1px 1px 0 var(--ink)}
+.btn.ghost{background:var(--white)}
+.menu-btn{display:none}
+@media (max-width:760px){
+  nav ul{display:none; position:absolute; top:64px; left:0; right:0; background:var(--paper); flex-direction:column; padding:16px 20px; border-bottom:2px solid var(--ink)}
+  nav ul.open{display:flex}
+  .menu-btn{display:inline-flex; padding:8px 14px}
+  .bar .btn.hire{display:none}
+}
+
+/* hero */
+.hero{padding:48px 0 64px}
+.hero-grid{display:grid; grid-template-columns:1fr 1.1fr; gap:40px; align-items:center}
+@media (max-width:900px){.hero-grid{grid-template-columns:1fr}}
+.hero h1 .scribble{display:inline-block; position:relative}
+.hero h1 .scribble svg{position:absolute; left:0; bottom:-10px; width:100%; height:16px}
+.picker{display:flex; gap:10px; flex-wrap:wrap; margin:22px 0 10px}
+.pick{border:2px solid var(--ink); background:var(--white); border-radius:999px; padding:10px 18px; font:inherit; font-weight:700; cursor:pointer}
+.pick[aria-pressed="true"]{background:var(--ink); color:var(--white)}
+.stage{background:var(--white); border:2px solid var(--ink); border-radius:18px; box-shadow:8px 8px 0 var(--ink); padding:18px; min-height:380px; position:relative}
+.stage .demo{display:none}
+.stage .demo.on{display:block; animation:pop .35s ease}
+@keyframes pop{from{opacity:0; transform:scale(.97)}to{opacity:1; transform:none}}
+.stage-label{position:absolute; top:-18px; right:18px; background:var(--marker); border:2px solid var(--ink); border-radius:8px; padding:2px 10px; font-family:var(--hand); font-size:1.3rem}
+
+/* website demo */
+.browser{border:2px solid var(--ink); border-radius:12px; overflow:hidden}
+.browser .chrome{display:flex; gap:6px; align-items:center; padding:8px 10px; background:var(--paper); border-bottom:2px solid var(--ink); font-size:.8rem}
+.dot{width:10px; height:10px; border-radius:50%; border:1.5px solid var(--ink)}
+.url{margin-left:8px; background:var(--white); border:1.5px solid var(--ink); border-radius:6px; padding:1px 10px; flex:1; overflow:hidden; white-space:nowrap; text-overflow:ellipsis}
+.site{padding:16px; transition:background .3s, color .3s}
+.site nav{display:flex; justify-content:space-between; font-weight:700; font-size:.85rem; margin-bottom:22px}
+.site .big{font-size:1.6rem; font-weight:800; line-height:1.1; margin-bottom:8px}
+.site .cta{display:inline-block; padding:6px 14px; border-radius:8px; font-weight:700; font-size:.85rem; margin-top:6px}
+.site .tiles{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:16px}
+.site .tiles span{height:44px; border-radius:8px; opacity:.85}
+.swatches{display:flex; gap:8px; margin-top:14px; flex-wrap:wrap}
+.swatches button{font:inherit; font-size:.9rem; border:2px solid var(--ink); border-radius:10px; padding:6px 12px; background:var(--white); cursor:pointer}
+.swatches button[aria-pressed="true"]{background:var(--marker)}
+
+/* poster demo */
+.poster-row{display:grid; grid-template-columns:200px 1fr; gap:18px; align-items:start}
+@media (max-width:520px){.poster-row{grid-template-columns:1fr}}
+.poster{aspect-ratio:3/4; border:2px solid var(--ink); border-radius:6px; padding:16px; display:flex; flex-direction:column; overflow:hidden; position:relative; transition:background .3s}
+.poster .ptitle{font-weight:800; font-size:1.7rem; line-height:1; word-break:break-word; position:relative; z-index:1}
+.poster .psub{font-size:.8rem; font-weight:600; position:relative; z-index:1}
+.poster .shape{position:absolute; border-radius:50%; transition:all .4s}
+.poster-controls label{display:block; font-weight:600; font-size:.9rem; margin-bottom:4px}
+.poster-controls input{width:100%; font:inherit; padding:8px 10px; border:2px solid var(--ink); border-radius:10px; margin-bottom:12px}
+
+/* game demo */
+.game-wrap{text-align:center}
+#game{width:100%; aspect-ratio:16/10; border:2px solid var(--ink); border-radius:12px; background:#121A33; touch-action:none; display:block}
+.game-hud{display:flex; justify-content:space-between; align-items:center; margin-top:10px; font-weight:700}
+
+/* services */
+.services-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:22px; margin-top:28px}
+@media (max-width:900px){.services-grid{grid-template-columns:1fr}}
+.svc{background:var(--white); border:2px solid var(--ink); border-radius:16px; padding:22px; display:flex; flex-direction:column}
+.svc.web{border-top:12px solid var(--sky)} .svc.poster-s{border-top:12px solid var(--pink)} .svc.game-s{border-top:12px solid var(--teal)}
+.svc ul{padding-left:18px; margin:0 0 16px}
+.svc li{margin-bottom:4px}
+.svc .from{margin-top:auto; font-weight:700}
+.svc .from b{font-size:1.5rem}
+
+/* process infographic */
+.process{background:var(--ink); color:var(--white); border-top:2px solid var(--ink); border-bottom:2px solid var(--ink)}
+.process p{color:#C9D2E8}
+.steps{list-style:none; padding:0; margin:36px 0 0; display:grid; grid-template-columns:repeat(4,1fr); gap:18px; counter-reset:s; position:relative}
+.steps::before{content:""; position:absolute; top:28px; left:8%; right:8%; border-top:3px dashed var(--marker)}
+.steps li{position:relative; text-align:center; padding:0 6px}
+.steps li::before{counter-increment:s; content:counter(s); display:grid; place-items:center; width:58px; height:58px; margin:0 auto 12px; border-radius:50%; background:var(--marker); color:var(--ink); font-weight:800; font-size:1.4rem; border:3px solid var(--white); position:relative}
+.steps h3{font-size:1.1rem}
+.steps p{font-size:.95rem; margin:0 auto}
+@media (max-width:760px){
+  .steps{grid-template-columns:1fr; gap:22px}
+  .steps::before{top:0; bottom:0; left:28px; right:auto; border-top:none; border-left:3px dashed var(--marker)}
+  .steps li{text-align:left; padding-left:76px; min-height:58px}
+  .steps li::before{position:absolute; left:0; top:0; margin:0}
+}
+.turnaround{margin-top:48px; display:grid; gap:12px; max-width:640px}
+.tbar{display:grid; grid-template-columns:120px 1fr 70px; align-items:center; gap:12px; font-weight:600}
+.tbar .track{height:18px; background:#2A3557; border-radius:9px; overflow:hidden}
+.tbar .fill{height:100%; width:0; border-radius:9px; transition:width 1.2s cubic-bezier(.2,.8,.2,1)}
+
+/* estimator */
+.est{display:grid; grid-template-columns:1.2fr 1fr; gap:28px; margin-top:24px}
+@media (max-width:900px){.est{grid-template-columns:1fr}}
+.panel{background:var(--white); border:2px solid var(--ink); border-radius:16px; padding:22px}
+fieldset{border:none; padding:0; margin:0 0 18px}
+legend{font-weight:800; margin-bottom:8px}
+.chips{display:flex; flex-wrap:wrap; gap:8px}
+.chip input{position:absolute; opacity:0; pointer-events:none}
+.chip span{display:inline-block; border:2px solid var(--ink); border-radius:999px; padding:7px 14px; cursor:pointer; font-weight:600; background:var(--white)}
+.chip input:checked + span{background:var(--teal); color:var(--white)}
+.chip input:focus-visible + span{outline:3px solid var(--sky); outline-offset:2px}
+.result{background:var(--marker); border:2px solid var(--ink); border-radius:16px; padding:22px; box-shadow:6px 6px 0 var(--ink)}
+.result .price{font-size:2.4rem; font-weight:800; line-height:1}
+.result .days{font-weight:600; margin:8px 0 16px}
+
+/* faq */
+details{background:var(--white); border:2px solid var(--ink); border-radius:14px; padding:14px 18px; margin-bottom:12px}
+summary{font-weight:700; cursor:pointer; list-style:none; display:flex; justify-content:space-between; gap:12px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+"; font-size:1.4rem; line-height:1}
+details[open] summary::after{content:"–"}
+details p{margin:10px 0 0}
+
+/* enquiry form */
+.form-shell{max-width:720px}
+.progress{display:flex; gap:8px; margin:18px 0 22px}
+.progress span{flex:1; height:8px; border-radius:4px; background:var(--grid); border:1.5px solid var(--ink)}
+.progress span.done{background:var(--teal)}
+.fstep{display:none}
+.fstep.on{display:block; animation:pop .3s ease}
+.field{margin-bottom:16px}
+.field label{display:block; font-weight:700; margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%; font:inherit; padding:11px 12px; border:2px solid var(--ink); border-radius:10px; background:var(--white); color:var(--ink)}
+.field textarea{min-height:120px; resize:vertical}
+.field small{color:var(--soft)}
+.two{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+@media (max-width:600px){.two{grid-template-columns:1fr}}
+.svc-cards{display:grid; grid-template-columns:repeat(3,1fr); gap:12px}
+@media (max-width:600px){.svc-cards{grid-template-columns:1fr}}
+.svc-card input{position:absolute; opacity:0; pointer-events:none}
+.svc-card span{display:block; border:2px solid var(--ink); border-radius:14px; padding:16px; text-align:center; cursor:pointer; background:var(--white); font-weight:700}
+.svc-card span i{display:block; font-style:normal; font-size:2rem}
+.svc-card input:checked + span{background:var(--ink); color:var(--white); box-shadow:4px 4px 0 var(--marker)}
+.svc-card input:focus-visible + span{outline:3px solid var(--sky); outline-offset:2px}
+.form-nav{display:flex; justify-content:space-between; gap:12px; margin-top:8px}
+.err{color:#C3002F; font-weight:600; min-height:1.4em; margin:4px 0 0}
+.hidden{display:none !important}
+.thanks{text-align:center; padding:30px 10px}
+.thanks .big{font-size:3rem}
+
+footer{border-top:2px solid var(--ink); padding:32px 0 40px; background:var(--white)}
+.foot{display:flex; justify-content:space-between; flex-wrap:wrap; gap:16px; align-items:center}
+.foot p{margin:0; color:var(--soft)}
+
+
+/* AI chat */
+.ai-chat{position:fixed;right:20px;bottom:20px;z-index:50}
+.ai-chat-toggle{border:2px solid var(--ink);background:var(--marker);color:var(--ink);font:inherit;font-weight:800;padding:12px 16px;border-radius:999px;cursor:pointer;box-shadow:5px 5px 0 var(--ink)}
+.ai-chat-panel{display:none;position:absolute;right:0;bottom:60px;width:min(390px,calc(100vw - 28px));height:560px;background:var(--white);border:2px solid var(--ink);border-radius:18px;box-shadow:8px 8px 0 var(--ink);overflow:hidden}
+.ai-chat-panel.open{display:flex;flex-direction:column}
+.ai-chat-head{padding:14px 16px;background:var(--ink);color:var(--white);display:flex;align-items:center;justify-content:space-between}
+.ai-chat-head strong{font-size:1rem}.ai-chat-head small{display:block;color:#C9D2E8;font-weight:500}
+.ai-chat-close{border:0;background:transparent;color:var(--white);font-size:1.4rem;cursor:pointer}
+.ai-chat-messages{flex:1;overflow:auto;padding:14px;background:#F7F9FD}
+.ai-msg{max-width:86%;padding:10px 12px;margin:0 0 10px;border-radius:14px;white-space:pre-wrap;word-break:break-word;font-size:.95rem}
+.ai-msg.bot{background:var(--white);border:1.5px solid var(--grid);margin-right:auto}.ai-msg.user{background:var(--ink);color:var(--white);margin-left:auto}
+.ai-quick{display:flex;gap:6px;flex-wrap:wrap;padding:8px 10px;background:#F7F9FD;border-bottom:1px solid var(--grid)}
+.ai-quick button{border:1px solid var(--ink);background:var(--white);border-radius:999px;padding:6px 9px;font:inherit;font-size:.78rem;cursor:pointer}
+.ai-quick button:hover{background:var(--marker)}
+.ai-chat-form{display:flex;gap:8px;padding:10px;border-top:2px solid var(--ink);background:var(--white)}
+.ai-chat-form textarea{resize:none;flex:1;height:44px;font:inherit;border:2px solid var(--ink);border-radius:10px;padding:9px 10px}
+.ai-chat-form button{border:2px solid var(--ink);background:var(--teal);color:var(--white);font:inherit;font-weight:800;border-radius:10px;padding:0 14px;cursor:pointer}
+.ai-status{font-size:.78rem;color:var(--soft);padding:0 14px 8px;background:var(--white)}
+@media (max-width:520px){.ai-chat{right:12px;bottom:12px}.ai-chat-panel{height:min(560px,calc(100vh - 100px));bottom:58px}}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none !important; transition:none !important; scroll-behavior:auto !important}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap bar">
+    <a href="#top" class="logo" aria-label="Byte & Brush Studio home">
+      <svg class="logo-mark" viewBox="0 0 40 40" aria-hidden="true">
+        <rect x="2" y="2" width="36" height="36" rx="9" fill="#FFC93C" stroke="#17213B" stroke-width="2.5"/>
+        <path d="M11 15l-4 5 4 5" fill="none" stroke="#17213B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M17 29c3-1 4-4 6-7l8-11c1-1 3 0 2 2l-9 11c-2 2-3 5-7 5z" fill="#FF4F81" stroke="#17213B" stroke-width="2"/>
+      </svg>
+      Byte &amp; Brush
+    </a>
+    <nav aria-label="Main">
+      <ul id="navlist">
+        <li><a href="#services">Services</a></li>
+        <li><a href="#process">How it works</a></li>
+        <li><a href="#estimate">Estimate</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
+    </nav>
+    <div style="display:flex; gap:10px">
+      <a class="btn hire" href="#enquire">Start a project</a>
+      <button class="btn ghost menu-btn" aria-expanded="false" aria-controls="navlist" id="menuBtn">Menu</button>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <p class="note">a small studio with big ideas</p>
+      <h1>Websites, posters and mini games,
+        <span class="scribble">made for you.
+          <svg viewBox="0 0 200 16" preserveAspectRatio="none" aria-hidden="true"><path d="M2 10 Q50 2 100 9 T198 7" fill="none" stroke="#FFC93C" stroke-width="6" stroke-linecap="round"/></svg>
+        </span>
+      </h1>
+      <p>Byte &amp; Brush builds simple, good-looking things for shops, school clubs, events and anyone with an idea. Pick a service to see what it could look like.</p>
+      <div class="picker" role="group" aria-label="Choose a service to preview">
+        <button class="pick" data-demo="web" aria-pressed="true">💻 Website</button>
+        <button class="pick" data-demo="poster" aria-pressed="false">🖼️ Poster</button>
+        <button class="pick" data-demo="game" aria-pressed="false">🎮 Game</button>
+      </div>
+      <a class="btn" href="#enquire">Start a project</a>
+    </div>
+
+    <div class="stage" aria-live="polite">
+      <span class="stage-label" id="stageLabel">try it!</span>
+
+      <!-- Website demo -->
+      <div class="demo on" id="demo-web">
+        <div class="browser">
+          <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url" id="siteUrl">sunnybakes.in</span></div>
+          <div class="site" id="miniSite">
+            <nav><span id="siteName">Sunny Bakes</span><span>Menu · Order · Visit</span></nav>
+            <div class="big" id="siteHead">Fresh bread every morning</div>
+            <div id="siteSub" style="font-size:.9rem">Order online, pick up in 20 minutes.</div>
+            <span class="cta" id="siteCta">Order now</span>
+            <div class="tiles"><span></span><span></span><span></span></div>
+          </div>
+        </div>
+        <div class="swatches" role="group" aria-label="Pick a website style">
+          <button data-theme="bakery" aria-pressed="true">🥐 Bakery</button>
+          <button data-theme="club" aria-pressed="false">🏏 Sports club</button>
+          <button data-theme="event" aria-pressed="false">🎉 Event</button>
+          <button data-theme="portfolio" aria-pressed="false">📷 Portfolio</button>
+        </div>
+      </div>
+
+      <!-- Poster demo -->
+      <div class="demo" id="demo-poster">
+        <div class="poster-row">
+          <div class="poster" id="poster">
+            <div class="shape" id="shape1"></div>
+            <div class="shape" id="shape2"></div>
+            <div class="ptitle" id="pTitle">Summer Fest</div>
+            <div style="flex:1"></div>
+            <div class="psub" id="pSub">Saturday · 5 PM · Town Hall</div>
+          </div>
+          <div class="poster-controls">
+            <label for="pTitleIn">Poster headline</label>
+            <input id="pTitleIn" value="Summer Fest" maxlength="28">
+            <label for="pSubIn">Details line</label>
+            <input id="pSubIn" value="Saturday · 5 PM · Town Hall" maxlength="40">
+            <button class="btn" id="shuffle">🎲 Shuffle design</button>
+            <p style="margin-top:12px; font-size:.9rem; color:var(--soft)">Real posters come with your logo, photos and print-ready files.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Game demo -->
+      <div class="demo game-wrap" id="demo-game">
+        <canvas id="game" width="480" height="300" aria-label="Mini game: move the basket to catch stars"></canvas>
+        <div class="game-hud">
+          <span>⭐ <span id="score">0</span></span>
+          <span>⏱ <span id="timer">20</span>s</span>
+          <button class="btn" id="playBtn">Play</button>
+        </div>
+        <p style="margin:8px auto 0; font-size:.9rem; color:var(--soft)">Move your mouse or finger to catch the stars. Avoid the red bombs!</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section id="services">
+  <div class="wrap">
+    <h2>What I can make for you</h2>
+    <p>Three services, each kept simple so you know exactly what you're getting.</p>
+    <div class="services-grid">
+      <article class="svc web">
+        <h3>💻 Website making</h3>
+        <p>A clean site that works on phones and laptops.</p>
+        <ul>
+          <li>Up to 5 pages (home, about, services, gallery, contact)</li>
+          <li>Contact form that emails you</li>
+          <li>Hosted online with a free link</li>
+        </ul>
+        <div class="from">From <b data-price="web"><span data-price-web>₹1,499</span></b></div>
+      </article>
+      <article class="svc poster-s">
+        <h3>🖼️ Poster design</h3>
+        <p>Eye-catching posters for shops, events and social media.</p>
+        <ul>
+          <li>2 design options to choose from</li>
+          <li>Instagram, WhatsApp and A4 print sizes</li>
+          <li>2 rounds of changes</li>
+        </ul>
+        <div class="from">From <b data-price="poster"><span data-price-poster>₹299</span></b></div>
+      </article>
+      <article class="svc game-s">
+        <h3>🎮 Basic game making</h3>
+        <p>Fun browser games for events, classrooms or promotions.</p>
+        <ul>
+          <li>Quiz, catch, memory or clicker games</li>
+          <li>Your colours, logo and characters</li>
+          <li>Playable on phone with a shareable link</li>
+        </ul>
+        <div class="from">From <b data-price="game"><span data-price-game>₹999</span></b></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESS INFOGRAPHIC -->
+<section id="process" class="process">
+  <div class="wrap">
+    <h2>How a project works</h2>
+    <p>From your first message to the finished file, here is the path every project takes.</p>
+    <ol class="steps">
+      <li><h3>Tell me your idea</h3><p>Fill the enquiry form below. A rough idea is enough.</p></li>
+      <li><h3>Plan together</h3><p>I reply with questions, a price and a delivery date.</p></li>
+      <li><h3>I make it</h3><p>You see a first version and ask for changes.</p></li>
+      <li><h3>You get it</h3><p>Final files or a live link, ready to use and share.</p></li>
+    </ol>
+    <div class="turnaround" id="turnaround">
+      <h3 style="margin-bottom:4px">Typical delivery time</h3>
+      <div class="tbar"><span>🖼️ Poster</span><div class="track"><div class="fill" data-w="20" style="background:var(--pink)"></div></div><span>2–3 days</span></div>
+      <div class="tbar"><span>🎮 Game</span><div class="track"><div class="fill" data-w="55" style="background:var(--teal)"></div></div><span>5–7 days</span></div>
+      <div class="tbar"><span>💻 Website</span><div class="track"><div class="fill" data-w="85" style="background:var(--sky)"></div></div><span>7–10 days</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ESTIMATOR -->
+<section id="estimate">
+  <div class="wrap">
+    <h2>Get a quick estimate</h2>
+    <p>Choose what you need and see a rough price. The final price is confirmed after we talk.</p>
+    <div class="est">
+      <div class="panel">
+        <fieldset>
+          <legend>What do you need?</legend>
+          <div class="chips">
+            <label class="chip"><input type="radio" name="eSvc" value="web" checked><span>💻 Website</span></label>
+            <label class="chip"><input type="radio" name="eSvc" value="poster"><span>🖼️ Poster</span></label>
+            <label class="chip"><input type="radio" name="eSvc" value="game"><span>🎮 Game</span></label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Size</legend>
+          <div class="chips">
+            <label class="chip"><input type="radio" name="eSize" value="1" checked><span>Small</span></label>
+            <label class="chip"><input type="radio" name="eSize" value="1.6"><span>Medium</span></label>
+            <label class="chip"><input type="radio" name="eSize" value="2.4"><span>Large</span></label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Extras</legend>
+          <div class="chips" id="extras"></div>
+        </fieldset>
+      </div>
+      <div class="result">
+        <div>Estimated price</div>
+        <div class="price" id="ePrice"><span data-price-web>₹1,499</span></div>
+        <div class="days" id="eDays">About 7–10 days</div>
+        <button class="btn ghost" id="useEstimate">Use this in my enquiry</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq" style="padding-top:0">
+  <div class="wrap" style="max-width:820px">
+    <h2>Questions people ask</h2>
+    <details><summary>Do I need to know anything about computers?</summary><p>No. Just describe what you want in your own words. Photos, examples you like or a sketch on paper all help.</p></details>
+    <details><summary>How do I pay?</summary><p>Payment details are shared once your project is confirmed. Usually half at the start and half when you're happy with the result.</p></details>
+    <details><summary>Can I ask for changes?</summary><p>Yes. Posters include 2 rounds of changes; websites and games include changes until the agreed features work.</p></details>
+    <details><summary>Will my website or game stay online?</summary><p>Yes. It's hosted on a free service with its own link. If you want your own domain name (like yourshop.in), I can help set that up.</p></details>
+    <details><summary>Who will I be talking to?</summary><p>Enquiries are answered by Abdulla, with a parent reviewing every project before it's confirmed.</p></details>
+  </div>
+</section>
+
+<!-- ENQUIRY -->
+<section id="enquire" style="padding-top:0">
+  <div class="wrap form-shell">
+    <h2>Start a project</h2>
+    <p>Three short steps. You'll get a reply within 2–3 days.</p>
+    <div class="progress" aria-hidden="true"><span class="done"></span><span></span><span></span></div>
+
+    <form name="enquiry" method="POST" data-netlify="true" netlify-honeypot="bot-field" id="enquiryForm" novalidate>
+      <input type="hidden" name="form-name" value="enquiry">
+      <p class="hidden"><label>Leave this empty: <input name="bot-field"></label></p>
+      <input type="hidden" name="estimate" id="estimateField">
+
+      <div class="fstep on" data-step="1">
+        <div class="field">
+          <label>Which service?</label>
+          <div class="svc-cards">
+            <label class="svc-card"><input type="radio" name="service" value="Website"><span><i>💻</i>Website</span></label>
+            <label class="svc-card"><input type="radio" name="service" value="Poster"><span><i>🖼️</i>Poster</span></label>
+            <label class="svc-card"><input type="radio" name="service" value="Game"><span><i>🎮</i>Game</span></label>
+          </div>
+        </div>
+        <p class="err" id="err1"></p>
+        <div class="form-nav"><span></span><button type="button" class="btn" data-next>Next</button></div>
+      </div>
+
+      <div class="fstep" data-step="2">
+        <div class="field">
+          <label for="idea">Tell me about your idea</label>
+          <textarea id="idea" name="idea" placeholder="e.g. A poster for our shop's Diwali offer, with our logo and a 20% off message"></textarea>
+        </div>
+        <div class="two">
+          <div class="field">
+            <label for="budget">Budget</label>
+            <select id="budget" name="budget">
+              <option value="">Choose one</option>
+              <option>Under ₹500</option><option>₹500 – ₹1,500</option><option>₹1,500 – ₹3,000</option><option>Above ₹3,000</option><option>Not sure yet</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="deadline">Needed by</label>
+            <input type="date" id="deadline" name="deadline">
+          </div>
+        </div>
+        <p class="err" id="err2"></p>
+        <div class="form-nav"><button type="button" class="btn ghost" data-back>Back</button><button type="button" class="btn" data-next>Next</button></div>
+      </div>
+
+      <div class="fstep" data-step="3">
+        <div class="two">
+          <div class="field"><label for="name">Your name</label><input id="name" name="name" autocomplete="name"></div>
+          <div class="field"><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email"></div>
+        </div>
+        <div class="field">
+          <label for="phone">Phone (optional)</label>
+          <input id="phone" name="phone" type="tel" autocomplete="tel">
+          <small>Only used to discuss your project.</small>
+        </div>
+        <p class="err" id="err3"></p>
+        <div class="form-nav"><button type="button" class="btn ghost" data-back>Back</button><button type="submit" class="btn">Send enquiry</button></div>
+      </div>
+    </form>
+
+    <div class="thanks panel hidden" id="thanks">
+      <div class="big">🎉</div>
+      <h3>Enquiry sent</h3>
+      <p style="margin:0 auto">Thanks! You'll get a reply by email within 2–3 days.</p>
+    </div>
+  </div>
+</section>
+</main>
+
+
+<!-- Real AI assistant -->
+<div class="ai-chat" aria-label="AI assistant">
+  <button class="ai-chat-toggle" id="aiChatToggle" aria-expanded="false">🤖 Ask Byte &amp; Brush AI</button>
+  <section class="ai-chat-panel" id="aiChatPanel" aria-label="Byte & Brush AI chat">
+    <div class="ai-chat-head">
+      <div><strong>Byte &amp; Brush AI</strong><small>Ask about our services, prices, websites, posters, games, or general questions.</small></div>
+      <button class="ai-chat-close" id="aiChatClose" aria-label="Close chat">×</button>
+    </div>
+    <div class="ai-quick" id="aiQuick">
+      <button type="button" data-q="What services do you offer?">Services</button>
+      <button type="button" data-q="How much does a website cost?">Website price</button>
+      <button type="button" data-q="How long does a project take?">Delivery time</button>
+    </div>
+    <div class="ai-chat-messages" id="aiMessages" aria-live="polite">
+      <div class="ai-msg bot">Hi! 👋 I’m the Byte &amp; Brush AI assistant. I can answer questions about our services and pricing, help you plan a project, or chat about many other topics. What would you like to know?</div>
+    </div>
+    <div class="ai-status" id="aiStatus">AI answers may take a few seconds.</div>
+    <form class="ai-chat-form" id="aiChatForm">
+      <textarea id="aiInput" maxlength="2000" placeholder="Type your question…" aria-label="Message"></textarea>
+      <button type="submit" id="aiSend">Send</button>
+    </form>
+  </section>
+</div>
+
+<footer>
+  <div class="wrap foot">
+    <a href="#top" class="logo">Byte &amp; Brush Studio</a>
+    <p>© <span id="yr">2026</span> Byte &amp; Brush · Designed and built by Abdulla</p><p><a href="/dashboard.html" style="font-weight:800">Owner dashboard</a></p><p style="font-size:.82rem">AI and enquiries are securely connected after Netlify deployment.</p>
+  </div>
+</footer>
+
+<script>
+/* ===== Edit prices here ===== */
+const PRICES = { web:1499, poster:299, game:999 };
+const DAYS   = { web:"7–10 days", poster:"2–3 days", game:"5–7 days" };
+const EXTRAS = {
+  web:[["Online booking / order form",800],["Photo gallery",400],["Own domain setup",500]],
+  poster:[["Extra size (banner/flyer)",150],["Animated version for Instagram",300],["Express (24 hours)",200]],
+  game:[["Leaderboard",500],["Custom characters",600],["Sound and music",300]]
+};
+const fmt = n => "₹" + Math.round(n).toLocaleString("en-IN");
+
+document.getElementById("yr").textContent = new Date().getFullYear();
+document.querySelectorAll("[data-price]").forEach(el => el.textContent = fmt(PRICES[el.dataset.price]));
+
+/* mobile menu */
+const menuBtn = document.getElementById("menuBtn"), navlist = document.getElementById("navlist");
+menuBtn.addEventListener("click", () => {
+  const open = navlist.classList.toggle("open");
+  menuBtn.setAttribute("aria-expanded", open);
+});
+navlist.querySelectorAll("a").forEach(a => a.addEventListener("click", () => { navlist.classList.remove("open"); menuBtn.setAttribute("aria-expanded", false); }));
+
+/* hero picker */
+const labels = { web:"try a style!", poster:"type your own!", game:"play it!" };
+document.querySelectorAll(".pick").forEach(btn => btn.addEventListener("click", () => {
+  document.querySelectorAll(".pick").forEach(b => b.setAttribute("aria-pressed", b === btn));
+  document.querySelectorAll(".demo").forEach(d => d.classList.toggle("on", d.id === "demo-" + btn.dataset.demo));
+  document.getElementById("stageLabel").textContent = labels[btn.dataset.demo];
+  if (btn.dataset.demo !== "game") stopGame();
+  else drawIdle();
+}));
+
+/* website demo */
+const THEMES = {
+  bakery:{url:"sunnybakes.in", name:"Sunny Bakes", head:"Fresh bread every morning", sub:"Order online, pick up in 20 minutes.", cta:"Order now", bg:"#FFF4E0", fg:"#5A3410", acc:"#E8892B", tiles:["#F6C177","#E8892B","#C4632A"]},
+  club:{url:"strikersclub.in", name:"Strikers CC", head:"Join the club this season", sub:"Weekend nets for ages 10 to 16.", cta:"Register", bg:"#0F3D2E", fg:"#E9FFF4", acc:"#FFC93C", tiles:["#1F7A55","#2EAD77","#FFC93C"]},
+  event:{url:"glowfest.in", name:"Glow Fest", head:"One night. Live music.", sub:"Tickets for 14 December are open.", cta:"Get tickets", bg:"#1B1035", fg:"#FCE7FF", acc:"#FF4F81", tiles:["#7B2FF7","#FF4F81","#FFC93C"]},
+  portfolio:{url:"meera.photo", name:"Meera Clicks", head:"Portraits with personality", sub:"Weddings, families and events.", cta:"See work", bg:"#F7F7F7", fg:"#1A1A1A", acc:"#1A1A1A", tiles:["#C9C9C9","#9A9A9A","#5E5E5E"]}
+};
+function setTheme(key){
+  const t = THEMES[key], site = document.getElementById("miniSite");
+  site.style.background = t.bg; site.style.color = t.fg;
+  document.getElementById("siteUrl").textContent = t.url;
+  document.getElementById("siteName").textContent = t.name;
+  document.getElementById("siteHead").textContent = t.head;
+  document.getElementById("siteSub").textContent = t.sub;
+  const cta = document.getElementById("siteCta");
+  cta.textContent = t.cta; cta.style.background = t.acc; cta.style.color = t.bg;
+  site.querySelectorAll(".tiles span").forEach((s,i) => s.style.background = t.tiles[i]);
+}
+document.querySelectorAll("[data-theme]").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll("[data-theme]").forEach(x => x.setAttribute("aria-pressed", x === b));
+  setTheme(b.dataset.theme);
+}));
+setTheme("bakery");
+
+/* poster demo */
+const PALETTES = [
+  {bg:"#FFC93C", fg:"#17213B", s1:"#FF4F81", s2:"#4D7CFE"},
+  {bg:"#17213B", fg:"#FFFFFF", s1:"#19B6A6", s2:"#FFC93C"},
+  {bg:"#FF4F81", fg:"#FFFFFF", s1:"#FFC93C", s2:"#17213B"},
+  {bg:"#E8F0FF", fg:"#17213B", s1:"#4D7CFE", s2:"#FF4F81"},
+  {bg:"#19B6A6", fg:"#0D2B28", s1:"#FFFFFF", s2:"#FFC93C"}
+];
+const LAYOUTS = [
+  {s1:{w:"140%",h:"70%",l:"-20%",t:"55%"}, s2:{w:"40%",h:"30%",l:"65%",t:"8%"}},
+  {s1:{w:"90%",h:"68%",l:"35%",t:"30%"}, s2:{w:"55%",h:"40%",l:"-20%",t:"68%"}},
+  {s1:{w:"60%",h:"45%",l:"-15%",t:"-10%"}, s2:{w:"80%",h:"60%",l:"40%",t:"60%"}}
+];
+let pi = 0, li = 0;
+function paintPoster(){
+  const p = PALETTES[pi], l = LAYOUTS[li], poster = document.getElementById("poster");
+  poster.style.background = p.bg; poster.style.color = p.fg;
+  const a = document.getElementById("shape1"), b = document.getElementById("shape2");
+  Object.assign(a.style,{width:l.s1.w,height:l.s1.h,left:l.s1.l,top:l.s1.t,background:p.s1,opacity:.9});
+  Object.assign(b.style,{width:l.s2.w,height:l.s2.h,left:l.s2.l,top:l.s2.t,background:p.s2,opacity:.85});
+}
+document.getElementById("shuffle").addEventListener("click", () => {
+  pi = (pi + 1 + Math.floor(Math.random()*(PALETTES.length-1))) % PALETTES.length;
+  li = (li + 1) % LAYOUTS.length; paintPoster();
+});
+document.getElementById("pTitleIn").addEventListener("input", e => document.getElementById("pTitle").textContent = e.target.value || "Your headline");
+document.getElementById("pSubIn").addEventListener("input", e => document.getElementById("pSub").textContent = e.target.value);
+paintPoster();
+
+/* mini game */
+const cv = document.getElementById("game"), ctx = cv.getContext("2d");
+const W = cv.width, H = cv.height;
+let items = [], basketX = W/2, score = 0, timeLeft = 20, running = false, raf, tick, spawn;
+function drawIdle(){
+  ctx.fillStyle = "#121A33"; ctx.fillRect(0,0,W,H);
+  for (let i=0;i<40;i++){ ctx.fillStyle = "rgba(255,255,255,"+(Math.random()*.5)+")"; ctx.fillRect(Math.random()*W, Math.random()*H, 2, 2); }
+  ctx.fillStyle = "#FFC93C"; ctx.font = "800 26px 'Bricolage Grotesque', sans-serif"; ctx.textAlign = "center";
+  ctx.fillText(running ? "" : (score ? "Score: " + score : "Star Catcher"), W/2, H/2 - 6);
+  ctx.fillStyle = "#C9D2E8"; ctx.font = "600 15px 'Bricolage Grotesque', sans-serif";
+  ctx.fillText(score ? "Press Play to try again" : "Press Play to start", W/2, H/2 + 22);
+}
+function pointer(e){
+  const r = cv.getBoundingClientRect();
+  const x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+  basketX = Math.max(30, Math.min(W-30, x * W / r.width));
+}
+cv.addEventListener("mousemove", pointer);
+cv.addEventListener("touchmove", e => { pointer(e); e.preventDefault(); }, {passive:false});
+cv.addEventListener("touchstart", pointer, {passive:true});
+document.addEventListener("keydown", e => {
+  if (!running) return;
+  if (e.key === "ArrowLeft") basketX = Math.max(30, basketX - 28);
+  if (e.key === "ArrowRight") basketX = Math.min(W-30, basketX + 28);
+});
+function star(x,y,r){
+  ctx.beginPath();
+  for (let i=0;i<10;i++){ const a = Math.PI/5*i - Math.PI/2, rr = i%2 ? r/2.2 : r; ctx.lineTo(x+Math.cos(a)*rr, y+Math.sin(a)*rr); }
+  ctx.closePath(); ctx.fill();
+}
+function loop(){
+  ctx.fillStyle = "#121A33"; ctx.fillRect(0,0,W,H);
+  items.forEach(it => {
+    it.y += it.v;
+    if (it.bomb){ ctx.fillStyle = "#FF4F81"; ctx.beginPath(); ctx.arc(it.x,it.y,11,0,7); ctx.fill(); }
+    else { ctx.fillStyle = "#FFC93C"; star(it.x,it.y,12); }
+    if (it.y > H-38 && it.y < H-14 && Math.abs(it.x - basketX) < 36){ it.hit = true; score = Math.max(0, score + (it.bomb ? -3 : 1)); }
+  });
+  items = items.filter(it => !it.hit && it.y < H+20);
+  ctx.fillStyle = "#19B6A6"; ctx.fillRect(basketX-32, H-26, 64, 14);
+  ctx.fillStyle = "#4D7CFE"; ctx.fillRect(basketX-32, H-30, 64, 5);
+  document.getElementById("score").textContent = score;
+  if (running) raf = requestAnimationFrame(loop);
+}
+function startGame(){
+  stopGame(); score = 0; timeLeft = 20; items = []; running = true;
+  document.getElementById("timer").textContent = timeLeft;
+  document.getElementById("playBtn").textContent = "Restart";
+  spawn = setInterval(() => items.push({x:20+Math.random()*(W-40), y:-10, v:2+Math.random()*2.5+(20-timeLeft)*.08, bomb:Math.random()<.18}), 420);
+  tick = setInterval(() => { timeLeft--; document.getElementById("timer").textContent = timeLeft; if (timeLeft<=0){ stopGame(); drawIdle(); document.getElementById("playBtn").textContent = "Play again"; } }, 1000);
+  loop();
+}
+function stopGame(){ running = false; cancelAnimationFrame(raf); clearInterval(tick); clearInterval(spawn); }
+document.getElementById("playBtn").addEventListener("click", startGame);
+drawIdle();
+
+/* turnaround bars animate when visible */
+const bars = document.querySelectorAll(".fill");
+const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting){ bars.forEach(b => b.style.width = b.dataset.w + "%"); io.disconnect(); } }), {threshold:.4});
+io.observe(document.getElementById("turnaround"));
+
+/* estimator */
+const extrasBox = document.getElementById("extras");
+function renderExtras(){
+  const svc = document.querySelector("[name=eSvc]:checked").value;
+  extrasBox.innerHTML = EXTRAS[svc].map((x,i) => `<label class="chip"><input type="checkbox" value="${x[1]}" data-name="${x[0]}"><span>${x[0]} (+${fmt(x[1])})</span></label>`).join("");
+  extrasBox.querySelectorAll("input").forEach(i => i.addEventListener("change", calc));
+  calc();
+}
+let lastEstimate = "";
+function calc(){
+  const svc = document.querySelector("[name=eSvc]:checked").value;
+  const size = parseFloat(document.querySelector("[name=eSize]:checked").value);
+  const picked = [...extrasBox.querySelectorAll("input:checked")];
+  const total = PRICES[svc]*size + picked.reduce((s,i) => s + +i.value, 0);
+  document.getElementById("ePrice").textContent = fmt(total);
+  document.getElementById("eDays").textContent = "About " + DAYS[svc];
+  const sizeName = {"1":"Small","1.6":"Medium","2.4":"Large"}[String(size)];
+  lastEstimate = `${{web:"Website",poster:"Poster",game:"Game"}[svc]} · ${sizeName} · ${picked.map(p=>p.dataset.name).join(", ") || "no extras"} · ${fmt(total)}`;
+  return svc;
+}
+document.querySelectorAll("[name=eSvc]").forEach(r => r.addEventListener("change", renderExtras));
+document.querySelectorAll("[name=eSize]").forEach(r => r.addEventListener("change", calc));
+renderExtras();
+document.getElementById("useEstimate").addEventListener("click", () => {
+  const svc = calc();
+  document.getElementById("estimateField").value = lastEstimate;
+  const val = {web:"Website",poster:"Poster",game:"Game"}[svc];
+  document.querySelector(`[name=service][value=${val}]`).checked = true;
+  const idea = document.getElementById("idea");
+  if (!idea.value) idea.value = "Estimate: " + lastEstimate + "\n\n";
+  document.getElementById("enquire").scrollIntoView();
+});
+
+/* robust multi-step Netlify form */
+const form = document.getElementById("enquiryForm");
+const steps = [...form.querySelectorAll(".fstep")];
+const prog = document.querySelectorAll(".progress span");
+const deadline = document.getElementById("deadline");
+if (deadline) deadline.min = new Date().toISOString().slice(0,10);
+let cur = 0;
+
+function show(i){
+  cur = Math.max(0, Math.min(steps.length - 1, i));
+  steps.forEach((s,k) => s.classList.toggle("on", k === cur));
+  prog.forEach((p,k) => p.classList.toggle("done", k <= cur));
+  const first = steps[cur].querySelector("input:not([type=hidden]),textarea,select");
+  if (first) setTimeout(() => first.focus({preventScroll:true}), 40);
+}
+
+function valid(i){
+  const err = document.getElementById("err" + (i+1));
+  err.textContent = "";
+  if (i === 0 && !form.querySelector("[name=service]:checked")){
+    err.textContent = "Please choose a service.";
+    return false;
+  }
+  if (i === 1){
+    if (form.idea.value.trim().length < 10){
+      err.textContent = "Please tell us a little more about your idea.";
+      return false;
+    }
+    if (form.deadline.value && form.deadline.value < new Date().toISOString().slice(0,10)){
+      err.textContent = "Please choose today or a future date.";
+      return false;
+    }
+  }
+  if (i === 2){
+    if (!form.name.value.trim()){
+      err.textContent = "Please enter your name.";
+      return false;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.value.trim())){
+      err.textContent = "Please enter a valid email address.";
+      return false;
+    }
+  }
+  return true;
+}
+
+form.querySelectorAll("[data-next]").forEach(b =>
+  b.addEventListener("click", () => { if (valid(cur)) show(cur + 1); })
+);
+form.querySelectorAll("[data-back]").forEach(b =>
+  b.addEventListener("click", () => show(cur - 1))
+);
+
+form.addEventListener("submit", async e => {
+  e.preventDefault();
+  if (!valid(2)) return;
+
+  const btn = form.querySelector("[type=submit]");
+  const err = document.getElementById("err3");
+  btn.disabled = true;
+  btn.textContent = "Sending…";
+  err.textContent = "";
+
+  try {
+    const fd = new FormData(form);
+    const payload = Object.fromEntries(fd.entries());
+    const res = await fetch("/.netlify/functions/enquiry", {
+      method: "POST",
+      headers: {"Content-Type": "application/json", "Accept": "application/json"},
+      body: JSON.stringify(payload)
+    });
+    const result = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(result.error || "HTTP " + res.status);
+
+    form.reset();
+    document.querySelector(".progress").classList.add("hidden");
+    form.classList.add("hidden");
+    document.getElementById("thanks").classList.remove("hidden");
+    document.getElementById("thanks").scrollIntoView({behavior:"smooth", block:"center"});
+  } catch (error) {
+    err.textContent =
+      "The form could not connect. Make sure this site is deployed on Netlify, then try again.";
+    btn.disabled = false;
+    btn.textContent = "Send enquiry";
+  }
+});
+
+/* real AI chat via secure Netlify Function */
+const aiToggle = document.getElementById("aiChatToggle");
+const aiPanel = document.getElementById("aiChatPanel");
+const aiClose = document.getElementById("aiChatClose");
+const aiMessages = document.getElementById("aiMessages");
+const aiForm = document.getElementById("aiChatForm");
+const aiInput = document.getElementById("aiInput");
+const aiSend = document.getElementById("aiSend");
+const aiStatus = document.getElementById("aiStatus");
+const aiQuick = document.getElementById("aiQuick");
+const aiHistory = [];
+
+function openAIChat(){
+  aiPanel.classList.add("open");
+  aiToggle.setAttribute("aria-expanded","true");
+  aiInput.focus();
+}
+function closeAIChat(){
+  aiPanel.classList.remove("open");
+  aiToggle.setAttribute("aria-expanded","false");
+}
+aiToggle.addEventListener("click", () => aiPanel.classList.contains("open") ? closeAIChat() : openAIChat());
+aiClose.addEventListener("click", closeAIChat);
+
+function addAIMessage(text, who){
+  const el = document.createElement("div");
+  el.className = "ai-msg " + who;
+  el.textContent = text;
+  aiMessages.appendChild(el);
+  aiMessages.scrollTop = aiMessages.scrollHeight;
+}
+
+async function askAI(message){
+  const clean = String(message || "").trim();
+  if (!clean) return;
+
+  addAIMessage(clean, "user");
+  aiHistory.push({role:"user", content:clean});
+  aiInput.value = "";
+  aiInput.disabled = true;
+  aiSend.disabled = true;
+  aiStatus.textContent = "Thinking…";
+
+  try {
+    const res = await fetch("/.netlify/functions/chat", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        messages: aiHistory.slice(-14),
+        business: {
+          name:"Byte & Brush Studio",
+          services:{
+            Website:{price:PRICES.web, delivery:DAYS.web, extras:EXTRAS.web},
+            Poster:{price:PRICES.poster, delivery:DAYS.poster, extras:EXTRAS.poster},
+            Game:{price:PRICES.game, delivery:DAYS.game, extras:EXTRAS.game}
+          }
+        }
+      })
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || "AI request failed");
+
+    addAIMessage(data.reply || "I’m here. What would you like to know?", "bot");
+    aiHistory.push({role:"assistant", content:data.reply || ""});
+    aiStatus.textContent = "AI assistant is online.";
+  } catch (err) {
+    addAIMessage(
+      "I’m temporarily unable to reach the AI service. You can still use the enquiry form below, or try the chat again in a moment.",
+      "bot"
+    );
+    aiStatus.textContent = "AI connection unavailable.";
+  } finally {
+    aiInput.disabled = false;
+    aiSend.disabled = false;
+    aiInput.focus();
+  }
+}
+
+aiForm.addEventListener("submit", e => {
+  e.preventDefault();
+  askAI(aiInput.value);
+});
+
+aiQuick.querySelectorAll("button").forEach(btn =>
+  btn.addEventListener("click", () => askAI(btn.dataset.q))
+);
+
+aiInput.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    aiForm.requestSubmit();
+  }
+});
+
+</script>
+</body>
+</html>

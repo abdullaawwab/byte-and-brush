@@ -1,0 +1,9 @@
+{
+  "name": "byte-and-brush-studio",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@netlify/blobs": "latest",
+    "@netlify/identity": "latest"
+  }
+}
